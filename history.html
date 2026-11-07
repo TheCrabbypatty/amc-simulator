@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Exam history — AMC Simulator</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="page">
+    <div class="card">
+      <header class="site-header">
+        <h1 class="brand"><a href="./">AMC Simulator</a></h1>
+        <nav class="menu">
+          <a href="./" class="nav-button">Home</a>
+          <a href="history.html" class="nav-button">Exam history</a>
+        </nav>
+      </header>
+
+      <main>
+        <h2 class="section-title">Past practice exams</h2>
+        <p class="muted">Attempts are stored in this browser only (localStorage). Click <b>Review</b> to see the full breakdown of an attempt, including the miss-cause labels.</p>
+        <div id="history-list"></div>
+        <p><button id="clear-history" class="btn-ghost" type="button">Clear all history</button></p>
+      </main>
+
+      <footer class="site-footer">
+        Problems © Mathematical Association of America (MAA), via LIVE by Po-Shen Loh's public past-contest pages; answer keys cross-checked against the AoPS Wiki. Practice tool — not affiliated with MAA or AoPS.
+      </footer>
+    </div>
+  </div>
+  <script>
+    (function () {
+      var KEY = "amcSim.history.v1";
+      function load() {
+        try { return JSON.parse(localStorage.getItem(KEY)) || []; }
+        catch (e) { return []; }
+      }
+      function fmtScore(s) { return (s % 1 === 0) ? String(s) : s.toFixed(1); }
+      var list = document.getElementById("history-list");
+      var h = load();
+      if (!h.length) {
+        list.innerHTML = "<p class='muted'>No attempts yet. Start an exam from the home page.</p>";
+      } else {
+        var rows = h.map(function (a) {
+          var d = new Date(a.date);
+          var causes = a.classifications ? Object.values(a.classifications).filter(Boolean).length : 0;
+          return "<tr><td>" + d.toLocaleDateString() + " " +
+            d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) + "</td><td>" + a.exam +
+            "</td><td><b>" + fmtScore(a.score) + "</b> / 150</td><td>" + a.correct + " correct · " +
+            a.blank + " blank · " + a.wrong + " wrong</td><td>✓ 28 min: " +
+            (a.checkpoints && a.checkpoints["28"] != null ? a.checkpoints["28"] : "—") +
+            " · ✓ 58 min: " + (a.checkpoints && a.checkpoints["58"] != null ? a.checkpoints["58"] : "—") +
+            "</td><td>" + (causes ? causes + " miss(es) labeled" : "") +
+            "</td><td><a href='./?review=" + a.id + "'>Review</a></td></tr>";
+        }).join("");
+        list.innerHTML = "<table class='history-table'><thead><tr><th>Date</th><th>Exam</th>" +
+          "<th>Score</th><th>Breakdown</th><th>Checkpoints</th><th>Causes</th><th></th></tr></thead><tbody>" +
+          rows + "</tbody></table>";
+      }
+      document.getElementById("clear-history").addEventListener("click", function () {
+        if (confirm("Delete all saved attempts in this browser? This cannot be undone.")) {
+          localStorage.removeItem(KEY);
+          location.reload();
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

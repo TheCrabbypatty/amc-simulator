@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AMC Simulator — practice AMC 10 the way the real online test looks</title>
+  <meta name="description" content="Timed AMC 10 practice simulator modeled on the AoPS online AMC environment, with a minute plan, solved-count checkpoints, and miss classification." />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%88%91%3C/text%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" />
+  <link rel="stylesheet" href="css/style.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+  <script defer src="js/app.js"></script>
+</head>
+<body>
+  <div class="page">
+    <div class="card">
+      <header class="site-header">
+        <h1 class="brand"><a href="./">AMC Simulator</a></h1>
+        <nav class="menu">
+          <a href="./" class="nav-button">Home</a>
+          <a href="history.html" class="nav-button">Exam history</a>
+        </nav>
+      </header>
+
+      <!-- ============ HOME ============ -->
+      <main id="home-screen">
+        <div id="resume-banner" class="resume-banner hidden">
+          <strong>You have an exam in progress.</strong>
+          <span id="resume-text"></span>
+          <button id="resume-btn" class="btn-primary" type="button">Resume exam</button>
+          <button id="discard-btn" class="btn-ghost" type="button">Discard it</button>
+        </div>
+
+        <h2 class="section-title">Pick an exam</h2>
+        <p class="muted">75 minutes, 25 problems, A–E. Scoring: 6 points correct, 1.5 blank, 0 wrong. Built to look and feel like the real AMC online test (AoPS platform).</p>
+
+        <div class="exam-grid">
+          <div class="exam-card">
+            <h3>2024 AMC 10B</h3>
+            <p class="muted">Mock 1 paper. Target: 15–16 clean solves.</p>
+            <button class="btn-primary" type="button" data-start="amc10b-2024">Start exam</button>
+          </div>
+          <div class="exam-card">
+            <h3>2024 AMC 10A</h3>
+            <p class="muted">Mock 2 paper — save this one for Monday's mock.</p>
+            <button class="btn-primary" type="button" data-start="amc10a-2024">Start exam</button>
+          </div>
+        </div>
+
+        <div id="recent-history" class="recent-history"></div>
+
+        <details class="help">
+          <summary>What is this?</summary>
+          <p>When the AMC moved online, the real test ran on the Art of Problem Solving website. This simulator copies that environment as closely as possible: a countdown timer, one question at a time, A–E bubbles on the left, and automatic grading with a full review afterwards. Problems are real past MAA AMC problems, sourced from LIVE by Po-Shen Loh's public past-contest pages and cross-checked against the AoPS Wiki answer keys. It is a practice tool, not affiliated with MAA or AoPS.</p>
+        </details>
+        <details class="help">
+          <summary>How do I use it?</summary>
+          <p>Click <b>Start exam</b> and your 75-minute timer starts. Click a bubble (A–E) to select it; click the same bubble again to unselect it and leave the question blank. Use <b>Prev / Next</b> or the arrow keys to move, <b>A–E</b> keys to answer, <b>F</b> to flag a question to come back to. The question palette shows answered (blue), current (outlined), and flagged (⚑) questions. When you finish, click <b>Submit test</b> — or just let the timer run out. Your score and a full breakdown appear on the review screen.</p>
+          <p><b>Minute plan (shown live during the test):</b> 0–3 scan all 25 · 3–28 Pass 1 · 28–58 Pass 2 · 58–68 Pass 3 · 68–75 check only. The ✓ counter records how many you have solved at the 28- and 58-minute checkpoints — the fix for the AMC 10 A miscount (14 solved, counted as 15).</p>
+        </details>
+        <details class="help">
+          <summary>Scoring &amp; review</summary>
+          <p>Correct: 6 points. Blank: 1.5 points. Wrong: 0. A target of 15–16 clean solves is roughly 100–108 points. On the review screen, every missed problem gets a cause label — <b>knowledge</b> (didn't know the concept), <b>recognition</b> (knew it but didn't spot it), <b>execution</b> (set it up, slipped somewhere), or <b>time</b> (ran out or skipped under pressure) — so the next mock can target the real bottleneck instead of re-studying everything. Results are saved in this browser only (localStorage); nothing is uploaded anywhere.</p>
+        </details>
+      </main>
+
+      <!-- ============ LOADING ============ -->
+      <main id="loading-screen" class="hidden">
+        <p id="loading-text">Retrieving questions... please wait.</p>
+      </main>
+
+      <!-- ============ TEST ============ -->
+      <main id="test-screen" class="hidden">
+        <div class="test-topbar">
+          <div class="test-title">
+            <h2 id="contest-heading-text"></h2>
+            <div id="phase-label" class="phase-label"></div>
+          </div>
+          <div class="test-stats">
+            <div id="timer" class="timer">Time Remaining: 1:15:00</div>
+            <div id="solved-counter" class="solved-counter">✓ Solved: 0 / 25</div>
+          </div>
+        </div>
+
+        <div class="minute-plan" id="minute-plan" aria-label="Minute plan">
+          <div class="mp-seg" data-phase="scan" style="flex:3"><span>0–3 · Scan</span></div>
+          <div class="mp-seg" data-phase="pass1" style="flex:25"><span>3–28 · Pass 1</span></div>
+          <div class="mp-seg" data-phase="pass2" style="flex:30"><span>28–58 · Pass 2</span></div>
+          <div class="mp-seg" data-phase="pass3" style="flex:10"><span>58–68 · Pass 3</span></div>
+          <div class="mp-seg" data-phase="check" style="flex:7"><span>68–75 · Check</span></div>
+        </div>
+        <div id="checkpoint-line" class="checkpoint-line">Checkpoints — ✓ at 28 min: — · ✓ at 58 min: —</div>
+
+        <div id="palette" class="palette" aria-label="Question palette"></div>
+
+        <div class="question-area">
+          <div class="question-head">
+            <span id="question-number" class="question-number"></span>
+            <button id="flag-btn" class="btn-ghost" type="button" title="Flag for review (F)">⚑ Flag for review</button>
+          </div>
+          <div class="problem">
+            <div class="bubbles" id="bubbles"></div>
+            <div class="problem-body" id="problem-body"></div>
+          </div>
+          <div class="question-nav">
+            <button id="prev-btn" class="btn-secondary" type="button">← Prev</button>
+            <button id="next-btn" class="btn-secondary" type="button">Next →</button>
+            <button id="submit-btn" class="btn-primary" type="button">Submit test</button>
+          </div>
+          <p class="muted small">Keys: A–E answer · ←/→ move · F flag. Click a selected bubble again to unselect it (blank).</p>
+        </div>
+      </main>
+
+      <!-- ============ FINISHED ============ -->
+      <main id="finished-screen" class="hidden">
+        <h2 id="finished-heading-text"></h2>
+        <div id="finished-score" class="score-banner"></div>
+        <div id="finished-breakdown" class="breakdown"></div>
+        <p class="muted">Scoring: correct 6, blank 1.5, wrong 0. Click below for the full breakdown — every answer vs. the correct one, the problems with your answers marked, and a cause label for each miss.</p>
+        <button id="view-scores" class="btn-primary" type="button">View results</button>
+        <button id="back-home-1" class="btn-ghost" type="button">Back home</button>
+      </main>
+
+      <!-- ============ REVIEW ============ -->
+      <main id="review-screen" class="hidden">
+        <h2 id="review-heading-text"></h2>
+        <div id="review-score" class="score-banner"></div>
+        <div id="review-meta" class="muted"></div>
+        <div id="miss-summary" class="miss-summary"></div>
+        <div id="review-answers-report"></div>
+        <div id="review-problems"></div>
+        <button id="back-home-2" class="btn-ghost" type="button">Back home</button>
+      </main>
+
+      <footer class="site-footer">
+        Problems © Mathematical Association of America (MAA), via LIVE by Po-Shen Loh's public past-contest pages; answer keys cross-checked against the AoPS Wiki. Interface modeled on the AoPS online AMC environment, as replicated by the open-source <a href="https://github.com/amctesseract/amctesseract.github.io" target="_blank" rel="noopener">Tesseract</a> project. Practice tool — not affiliated with MAA or AoPS. Results are stored in your browser only.
+      </footer>
+    </div>
+  </div>
+
+  <!-- Submit confirmation modal -->
+  <div id="submit-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="submit-modal-title">
+    <div class="modal-card">
+      <h3 id="submit-modal-title">Submit this test?</h3>
+      <p id="submit-modal-text"></p>
+      <p class="muted small">You cannot change answers after submitting. Unanswered questions count as blank (1.5 points each).</p>
+      <div class="modal-actions">
+        <button id="modal-cancel" class="btn-secondary" type="button">Keep working</button>
+        <button id="modal-confirm" class="btn-primary" type="button">Submit test</button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
