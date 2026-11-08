@@ -102,3 +102,10 @@ tools/fetch_problems.py  re-fetch problem data from the source pages
 ## Not affiliated
 
 Practice tool only — not affiliated with MAA, AoPS, or LIVE by Po-Shen Loh.
+
+
+## Last Updated
+
+<!-- TIMESTAMP_START -->
+_Last updated: 2026-11-08 10:52 UTC_
+<!-- TIMESTAMP_END -->
