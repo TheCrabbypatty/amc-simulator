@@ -107,5 +107,5 @@ Practice tool only — not affiliated with MAA, AoPS, or LIVE by Po-Shen Loh.
 ## Last Updated
 
 <!-- TIMESTAMP_START -->
-_Last updated: 2026-11-10 22:02 UTC_
+_Last updated: 2026-11-11 02:22 UTC_
 <!-- TIMESTAMP_END -->
